@@ -1,4 +1,4 @@
-# techdegree-project-4 _Store Inventory_
+# _Store Inventory_
 
 ```
 class Product(Model)
