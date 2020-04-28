@@ -9,11 +9,11 @@ from peewee import *
 db = SqliteDatabase("inventory.db")
 
 class Product(Model):
-    id = AutoField()
-    name = CharField(max_length=255, unique=True)
-    price = IntegerField(default=0)
-    quantity = IntegerField(default=0)
-    updated = DateField()
+    product_id = AutoField()
+    product_name = CharField(max_length=255, unique=True)
+    product_price = IntegerField(default=0)
+    product_quantity = IntegerField(default=0)
+    date_updated = DateField()
 
     def __str__(self):
         r = "id: {}\n".format(self.id)
@@ -54,33 +54,37 @@ def fill_invetory():
 def add_to_inventory(name="", price=0, quantity=0, updated="01-01-01"):
     """ Add new product after being cleaned """
     try:
-        Product.create(name=name,
-        price=price,
-        quantity=quantity,
-        updated=updated)
+        Product.create(
+            product_name=name,
+            product_price=price,
+            product_quantity=quantity,
+            date_updated=updated)
     except IntegrityError:
-        print("Product repeated las update saved.")
-        prod_in_date = Product.select().where(Product.name == name).get().updated
+        prod_in_date = Product.select().where(Product.product_name == name).get().date_updated
         if prod_in_date <= updated:
-            Product.update(price=price,
-            quantity=quantity,
-            updated=updated).where(Product.name == name)
-
+            print("Product repeated las update saved.")
+            print("Name: {}".format(Product.select().where(Product.product_name == name).get().product_name))
+            print("updated {}, prod_in_date: {}".format(updated, prod_in_date))
+            up = Product.update(
+                product_price=price,
+                product_quantity=quantity,
+                date_updated=updated).where(Product.product_name == name)
+            up.execute()   
 
 def view_product_by_id():
     """ View product by id."""
     while True:
-        min_id = Product.select().order_by(Product.id.asc()).get().id 
-        max_id = Product.select().order_by(Product.id.desc()).get().id 
+        min_id = Product.select().order_by(Product.product_id.asc()).get().product_id 
+        max_id = Product.select().order_by(Product.product_id.desc()).get().product_id 
         opt = input("Please enter and id ({} - {}, r to return): ".format(min_id, max_id))
         if opt.lower().strip() == "r":
             break
         else:
             try:    
-                prod = Product.select().where(Product.id == int(opt)).get()
-                print("\nid: {}\nName: {}".format(prod.id, prod.name))
-                print("=====" + "=" * len(prod.name))
-                print("Price: {}\nQuantity: {}\nDate Updated: {}\n".format(prod.price, prod.quantity, prod.updated))
+                prod = Product.select().where(Product.product_id == int(opt)).get()
+                print("\nid: {}\nName: {}".format(prod.product_id, prod.product_name))
+                print("=====" + "=" * len(prod.product_name))
+                print("Price: {}\nQuantity: {}\nDate Updated: {}\n".format(prod.product_price, prod.product_quantity, prod.date_updated))
             except ValueError:
                 print("Value must be an int or r")
             except:
@@ -99,25 +103,23 @@ def add_new_product():
 
 def backup():
     """ Backup the database as csv. """
-    with open("store-inventory/inventory.bak.csv", "w") as bak:
+    with open("store-inventory/backup.csv", "w") as bak:
         field_names = ["product_name", "product_price", "product_quantity", "date_updated"]
         wrtr = csv.DictWriter(bak, fieldnames=field_names)
-
         wrtr.writeheader()
         for i in Product:
             wrtr.writerow({
-                "product_name" : i.name,
-                "product_price": i.price,
-                "product_quantity": i.quantity,
-                "date_updated": str(i.updated.month)+"/"+str(i.updated.day)+"/"+str(i.updated.year)
+                "product_name" : i.product_name,
+                "product_price": i.product_price,
+                "product_quantity": i.product_quantity,
+                "date_updated": str(i.date_updated.month)+"/"+str(i.date_updated.day)+"/"+str(i.date_updated.year)
             })
-        
-        print("A backup was created in store-inventory/intentory.bak.csv.\n")
+
+        print("A backup was created in store-inventory/backup.csv.\n")
     
 
 def menu_loop():
     choice = None
-
     while choice != "q":
         print("Enter 'q' to quit.")
         for key, value in menu.items():
@@ -130,11 +132,13 @@ def menu_loop():
         elif choice != "q":
             print("You must choose a valid option.")
 
+
 menu = OrderedDict([
     ("a", add_new_product),
     ("b", backup),
     ("v", view_product_by_id)
 ])
+
 
 if __name__ == "__main__":
     db.connect()
