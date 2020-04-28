@@ -1,5 +1,4 @@
 import csv
-import re
 from collections import OrderedDict
 from datetime import date
 
@@ -64,7 +63,6 @@ def add_to_inventory(name="", price=0, quantity=0, updated="01-01-01"):
         if prod_in_date <= updated:
             print("Product repeated las update saved.")
             print("Name: {}".format(Product.select().where(Product.product_name == name).get().product_name))
-            print("updated {}, prod_in_date: {}".format(updated, prod_in_date))
             up = Product.update(
                 product_price=price,
                 product_quantity=quantity,
