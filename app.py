@@ -1,4 +1,6 @@
 import csv
+import re
+
 from collections import OrderedDict
 from datetime import date
 
@@ -92,8 +94,24 @@ def view_product_by_id():
 def add_new_product():
     """ Add new product to the database by terminal."""
     name = input("Please enter name: ")
-    price = input("Please enter a price (in format $4.30): ")
-    quantity = input("Please the quantity: ")
+    price = None
+    while not price:
+        price = re.match(r'^[$]{1}\d+[.]+\d{2}$', input("Please enter a price (in format $4.30): "))
+        if price is None:
+            print("Please input the price in the correct format.")
+        else:
+            price = price.group()
+
+    quantity = None
+    while not isinstance(quantity, int):
+        try: 
+            quantity = int(input("Please input the quantity: "))
+            if quantity < 0:
+                quantity = None
+                print("Quantity must be greater or equal than 0.")
+        except ValueError:
+            print("The quantity must be an int.")
+        
     updated = date.today()
     cln_prod = clean_product(name, price, quantity)
     add_to_inventory(cln_prod["name"], cln_prod["price"], cln_prod["quantity"], updated)
@@ -112,7 +130,6 @@ def backup():
                 "product_quantity": i.product_quantity,
                 "date_updated": str(i.date_updated.month)+"/"+str(i.date_updated.day)+"/"+str(i.date_updated.year)
             })
-
         print("A backup was created in store-inventory/backup.csv.\n")
     
 
@@ -124,7 +141,6 @@ def menu_loop():
             print("{}) {}".format(key, value.__doc__))
         choice = input("Choose an option: ").lower().strip()
         print("\n")
-
         if choice in menu:
             menu[choice]()
         elif choice != "q":
